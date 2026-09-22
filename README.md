@@ -30,7 +30,13 @@ Backend de Meeple hecho con FastAPI, SQLAlchemy/Alembic y Postgres.
    copy .env.example .env
    ```
 
-   Los valores por defecto ya coinciden con el `docker-compose.yml`, así que no hace falta tocar nada para desarrollo local.
+   Los valores por defecto ya coinciden con el `docker-compose.yml`, así que no hace falta tocar nada para desarrollo local, salvo `SECRET_KEY` (usada para firmar los JWT de auth). Generá una propia:
+
+   ```powershell
+   python -c "import secrets; print(secrets.token_hex(32))"
+   ```
+
+   Si ya tenés un Postgres corriendo en el puerto 5432 (por ejemplo un servicio nativo de Windows), cambiá `POSTGRES_PORT` en `.env` y el puerto en `DATABASE_URL` a algo libre como `5433`.
 
 5. Levantá Postgres:
 
@@ -38,22 +44,41 @@ Backend de Meeple hecho con FastAPI, SQLAlchemy/Alembic y Postgres.
    docker compose up -d
    ```
 
-6. Corré la API:
+6. Aplicá las migraciones:
+
+   ```powershell
+   alembic upgrade head
+   ```
+
+7. Corré la API:
 
    ```powershell
    uvicorn app.main:app --reload
    ```
 
-7. Probá que responde en [http://localhost:8000/health](http://localhost:8000/health).
+8. Probá que responde en [http://localhost:8000/health](http://localhost:8000/health).
+
+## Auth
+
+- `POST /auth/register` — `{ email, username, name, password }` → crea el usuario.
+- `POST /auth/login` — `{ email, password }` → `{ access_token, token_type }`.
+- `GET /users/me` — requiere header `Authorization: Bearer <access_token>`.
 
 ## Estructura
 
 ```
 app/
   main.py          # instancia de FastAPI y registro de routers
-  routers/         # endpoints agrupados por dominio
+  core/            # configuración (env vars) y seguridad (hashing, JWT)
+  db/              # engine y sesión de SQLAlchemy
+  deps.py          # dependencias compartidas (ej. get_current_user)
   models/          # modelos de SQLAlchemy
+  schemas/         # esquemas de Pydantic (request/response)
+  routers/         # endpoints agrupados por dominio
+alembic/           # migraciones de base de datos
 ```
+
+Para agregar un modelo nuevo: creá el modelo en `app/models/`, importalo en `app/models/__init__.py` y corré `alembic revision --autogenerate -m "..."` seguido de `alembic upgrade head`.
 
 ## Notas
 
