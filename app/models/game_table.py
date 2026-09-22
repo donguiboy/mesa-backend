@@ -31,6 +31,15 @@ class GameTable(Base):
         ARRAY(PGUUID(as_uuid=True)), nullable=True
     )
     result_was_tie: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # use_alter: rompe el ciclo game_tables <-> matches para create_all/drop_all
+    # (coincide con la migración, que agrega esta FK en un ALTER TABLE separado).
+    logged_match_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey(
+            "matches.id", use_alter=True, name="fk_game_tables_logged_match_id_matches"
+        ),
+        nullable=True,
+    )
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

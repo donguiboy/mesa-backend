@@ -80,6 +80,12 @@ Backend de Meeple hecho con FastAPI, SQLAlchemy/Alembic y Postgres.
 
 Estados de una mesa: `proposing → voting → resolved`, o `cancelled` en cualquier momento antes de resolverse.
 
+## Partidas
+
+- `POST /matches` — registra una partida jugada. Requiere `game_id`, `participant_ids` (el usuario logueado tiene que ser uno de ellos) y exactamente un resultado: `winner_id`, o `is_tie` + `tied_ids`, o `is_group_win` + `group_win_ids`. `table_id` es opcional: si se manda, la mesa debe estar `resolved`, no tener ya una partida registrada, y los participantes deben pertenecer a ella — al crearse la partida, la mesa queda linkeada vía `logged_match_id`.
+- `GET /matches` — lista las partidas en las que participaste.
+- `GET /matches/{id}` — detalle de una partida (solo si fuiste participante).
+
 ## Tests
 
 ```powershell

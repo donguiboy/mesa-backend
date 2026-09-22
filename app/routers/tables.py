@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session, selectinload
 from app.db.session import get_db
 from app.deps import get_current_user
 from app.models.enums import MembershipStatus, ParticipantRole, ProposalStatus, TableStatus
-from app.models.game import Game
 from app.models.game_table import GameTable
 from app.models.table_participant import TableParticipant
 from app.models.user import User
@@ -20,6 +19,7 @@ from app.schemas.table import (
     TableRead,
     VoteGames,
 )
+from app.validators import require_existing_games, require_existing_users
 
 router = APIRouter(prefix="/tables", tags=["tables"])
 
@@ -47,20 +47,6 @@ def _require_host(table: GameTable, user_id: uuid.UUID) -> None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Solo el host puede hacer esto")
 
 
-def _require_existing_users(db: Session, user_ids: list[uuid.UUID]) -> None:
-    found = set(db.scalars(select(User.id).where(User.id.in_(user_ids))))
-    missing = set(user_ids) - found
-    if missing:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Usuario(s) no encontrado(s): {missing}")
-
-
-def _require_existing_games(db: Session, game_ids: list[uuid.UUID]) -> None:
-    found = set(db.scalars(select(Game.id).where(Game.id.in_(game_ids))))
-    missing = set(game_ids) - found
-    if missing:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Juego(s) no encontrado(s): {missing}")
-
-
 @router.post("", response_model=TableRead, status_code=status.HTTP_201_CREATED)
 def create_table(
     payload: TableCreate,
@@ -69,7 +55,7 @@ def create_table(
 ) -> GameTable:
     guest_ids = [pid for pid in payload.participant_ids if pid != current_user.id]
     if guest_ids:
-        _require_existing_users(db, guest_ids)
+        require_existing_users(db, guest_ids)
 
     table = GameTable(
         host_id=current_user.id,
@@ -139,7 +125,7 @@ def invite_participants(
     already_in = {p.player_id for p in table.participants}
     new_ids = [pid for pid in payload.participant_ids if pid not in already_in]
     if new_ids:
-        _require_existing_users(db, new_ids)
+        require_existing_users(db, new_ids)
         for guest_id in new_ids:
             table.participants.append(
                 TableParticipant(table_id=table.id, player_id=guest_id, role=ParticipantRole.GUEST)
@@ -187,7 +173,7 @@ def propose_games(
     if participant.membership_status != MembershipStatus.CONFIRMED:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Confirmá tu asistencia antes de proponer")
 
-    _require_existing_games(db, payload.game_ids)
+    require_existing_games(db, payload.game_ids)
 
     participant.proposed_game_ids = payload.game_ids
     participant.proposal_status = ProposalStatus.SENT
@@ -234,7 +220,7 @@ def vote_games(
             f"Podés votar hasta {table.planned_games_count} juego(s)",
         )
 
-    _require_existing_games(db, payload.game_ids)
+    require_existing_games(db, payload.game_ids)
 
     participant.votes = payload.game_ids
     db.commit()
@@ -255,7 +241,7 @@ def resolve_table(
     if table.status != TableStatus.VOTING:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "La mesa no está en etapa de votación")
 
-    _require_existing_games(db, payload.result_game_ids)
+    require_existing_games(db, payload.result_game_ids)
 
     table.result_game_ids = payload.result_game_ids
     table.result_was_tie = payload.result_was_tie

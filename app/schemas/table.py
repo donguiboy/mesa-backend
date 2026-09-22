@@ -60,5 +60,6 @@ class TableRead(BaseModel):
     description: str | None
     result_game_ids: list[uuid.UUID] | None
     result_was_tie: bool
+    logged_match_id: uuid.UUID | None
     created_at: datetime
     participants: list[ParticipantRead]
