@@ -64,6 +64,16 @@ Backend de Meeple hecho con FastAPI, SQLAlchemy/Alembic y Postgres.
 - `POST /auth/login` — `{ email, password }` → `{ access_token, token_type }`.
 - `GET /users/me` — requiere header `Authorization: Bearer <access_token>`.
 
+## Tests
+
+```powershell
+pip install -r requirements-dev.txt
+createdb -U meeple -h localhost -p 5433 meeple_test   # una sola vez
+pytest
+```
+
+Los tests corren contra `TEST_DATABASE_URL` (ver `.env.example`), nunca contra la base de desarrollo: cada test se ejecuta dentro de una transacción que se revierte al terminar.
+
 ## Estructura
 
 ```
@@ -76,6 +86,7 @@ app/
   schemas/         # esquemas de Pydantic (request/response)
   routers/         # endpoints agrupados por dominio
 alembic/           # migraciones de base de datos
+tests/             # tests de pytest (ver sección "Tests")
 ```
 
 Para agregar un modelo nuevo: creá el modelo en `app/models/`, importalo en `app/models/__init__.py` y corré `alembic revision --autogenerate -m "..."` seguido de `alembic upgrade head`.

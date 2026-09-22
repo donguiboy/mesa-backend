@@ -22,3 +22,6 @@ __pycache__/
 
 # Alembic (si versionás las migraciones, NO ignores alembic/versions/)
 .env
+
+# Tests
+.pytest_cache/
