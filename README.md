@@ -66,7 +66,7 @@ Backend de Meeple hecho con FastAPI, SQLAlchemy/Alembic y Postgres.
 
 ## Juegos y mesas
 
-- `GET /games` / `POST /games` — catálogo de juegos (por ahora solo `name`; se va a enriquecer con datos de BGG más adelante).
+- `GET /games` / `POST /games` — catálogo de juegos, con datos de BGG (descripción, mecánicas, imagen, rating, etc.) para los importados con `scripts/import_bgg_games.py`; `POST /games` crea uno ad-hoc solo con `name`.
 - `POST /tables` — crea una mesa (el creador queda como host confirmado); acepta `participant_ids` para invitar de una.
 - `GET /tables` — lista las mesas donde participás (host o invitado).
 - `GET /tables/{id}` — detalle de una mesa (solo si sos participante).
@@ -79,6 +79,16 @@ Backend de Meeple hecho con FastAPI, SQLAlchemy/Alembic y Postgres.
 - `POST /tables/{id}/cancel` — el host cancela la mesa (si no está resuelta o ya cancelada).
 
 Estados de una mesa: `proposing → voting → resolved`, o `cancelled` en cualquier momento antes de resolverse.
+
+### Catálogo de BGG
+
+`app/seed_data/bgg_games.json` tiene los 500 juegos más poseídos en BoardGameGeek (mismo dataset que usa el frontend en `bgg-seed-data.ts`, extraído una sola vez — no se vuelve a generar automáticamente). Para cargarlos:
+
+```powershell
+python scripts/import_bgg_games.py
+```
+
+Es idempotente: hace upsert por `bgg_id`, así que correrlo de nuevo actualiza los datos existentes en vez de duplicarlos.
 
 ## Partidas
 

@@ -13,4 +13,20 @@ class GameRead(BaseModel):
 
     id: uuid.UUID
     name: str
+    bgg_id: str | None
+    description: str | None
+    players: str | None
+    duration: str | None
+    complexity: int | None
+    category: str | None
+    categories: list[str] | None
+    mechanics: list[str] | None
+    themes: list[str] | None
+    tags: list[str] | None
+    image: str | None
+    rating: float | None
+    year_published: int | None
+    min_age: int | None
+    gradient: str | None
+    emoji: str | None
     created_at: datetime
