@@ -64,6 +64,22 @@ Backend de Meeple hecho con FastAPI, SQLAlchemy/Alembic y Postgres.
 - `POST /auth/login` — `{ email, password }` → `{ access_token, token_type }`.
 - `GET /users/me` — requiere header `Authorization: Bearer <access_token>`.
 
+## Juegos y mesas
+
+- `GET /games` / `POST /games` — catálogo de juegos (por ahora solo `name`; se va a enriquecer con datos de BGG más adelante).
+- `POST /tables` — crea una mesa (el creador queda como host confirmado); acepta `participant_ids` para invitar de una.
+- `GET /tables` — lista las mesas donde participás (host o invitado).
+- `GET /tables/{id}` — detalle de una mesa (solo si sos participante).
+- `POST /tables/{id}/invite` — el host invita más participantes.
+- `POST /tables/{id}/respond` — `{ confirm }`: el invitado confirma o rechaza.
+- `POST /tables/{id}/propose` — `{ game_ids }`: un participante confirmado propone juegos (mientras la mesa está `proposing`).
+- `POST /tables/{id}/start-voting` — el host cierra propuestas y abre votación.
+- `POST /tables/{id}/vote` — `{ game_ids }`: un participante confirmado vota (mientras la mesa está `voting`; respeta `planned_games_count` si está seteado).
+- `POST /tables/{id}/resolve` — `{ result_game_ids, result_was_tie }`: el host cierra la mesa con el resultado.
+- `POST /tables/{id}/cancel` — el host cancela la mesa (si no está resuelta o ya cancelada).
+
+Estados de una mesa: `proposing → voting → resolved`, o `cancelled` en cualquier momento antes de resolverse.
+
 ## Tests
 
 ```powershell
