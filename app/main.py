@@ -1,14 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import settings
 from app.routers import auth, games, health, matches, tables, users
 
 app = FastAPI(title="Meeple API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    # vite dev salta de puerto si el anterior está ocupado (8080, 8081, ...);
+    # el regex evita tener que ir agregando cada puerto nuevo a mano.
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_methods=["*"],
     allow_headers=["*"],
 )
