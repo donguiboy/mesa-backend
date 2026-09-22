@@ -1,0 +1,24 @@
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Variables de entorno
+.env
+
+# VS Code
+.vscode/
+
+# Docker
+*.log
+
+# Alembic (si versionás las migraciones, NO ignores alembic/versions/)
+.env
